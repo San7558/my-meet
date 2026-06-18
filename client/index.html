@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Translation Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!--
+    MediaPipe CDN scripts — loaded here in <head> with no defer/async so they
+    are fully evaluated before the React bundle (type="module") runs.
+
+    IMPORTANT: The React module script below is always deferred by the browser,
+    so these classic scripts WILL finish first when placed in <head>.
+
+    camera_utils is NOT needed (we drive the loop manually with rAF),
+    so it is excluded to avoid conflicts.
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

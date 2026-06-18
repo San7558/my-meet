@@ -1,0 +1,744 @@
+================================================================================
+AI TRANSLATION ROOM — COMPLETE DOCUMENTATION
+================================================================================
+
+TABLE OF CONTENTS
+=================
+1.  Project Overview
+2.  What Problem This Project Solves
+3.  Full Feature Explanation
+4.  Full Tech Stack Explanation
+5.  Frontend Folder Explanation
+6.  Backend Folder Explanation
+7.  Step-by-Step Local Setup
+8.  How to Create a Firebase Project
+9.  How to Enable Google Login in Firebase
+10. How to Get Firebase Web Config
+11. How to Get Firebase Admin SDK Values
+12. How to Create MongoDB Atlas Cluster
+13. How to Get MongoDB URI
+14. How to Create Deepgram API Key
+15. How to Run LibreTranslate Using Docker
+16. How Auto Language Detection Works
+17. How Translation Works
+18. How Gesture Detection Works
+19. How the Warning System Works
+20. How PDF Export Works
+21. How to Deploy Frontend on Vercel
+22. How to Deploy Backend on Render
+23. What to Set in Vercel Environment Variables
+24. What to Set in Render Environment Variables
+25. Common Errors and Fixes
+26. Final Testing Checklist
+
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+AI Translation Room is a professional SaaS-style web application that provides
+real-time multilingual speech translation with AI-powered gesture safety
+monitoring.
+
+Users sign in with Google, join a live session, speak in any language, and
+instantly see translated captions in their chosen target language. The system
+also monitors for inappropriate hand gestures and enforces a 3-strike
+warning system.
+
+After a session, users can download the complete translated transcript as a
+professionally formatted PDF document.
+
+
+================================================================================
+2. WHAT PROBLEM THIS PROJECT SOLVES
+================================================================================
+
+In multilingual meetings, conferences, or classrooms:
+
+- Language barriers prevent real-time understanding.
+- Manual translation is slow and error-prone.
+- There is no automated way to detect inappropriate gestures.
+- Transcripts are often lost after the session ends.
+
+AI Translation Room solves all of these:
+
+- Automatic speech-to-text in any language (Deepgram).
+- Automatic translation to the user's chosen language (LibreTranslate).
+- AI gesture detection for safety moderation (MediaPipe).
+- One-click PDF export of the full session transcript (jsPDF).
+
+
+================================================================================
+3. FULL FEATURE EXPLANATION
+================================================================================
+
+3.1 Landing Page
+    - Premium dark SaaS design.
+    - Glassmorphism cards.
+    - 3D rotating globe (React Three Fiber).
+    - Feature highlights, workflow steps, tech stack display.
+    - Call-to-action button leading to login.
+
+3.2 Authentication
+    - Google Sign-In using Firebase Authentication.
+    - Protected routes redirect unauthenticated users to login.
+    - User profile (name, email, avatar) displayed on dashboard.
+
+3.3 Dashboard
+    - User profile card with online status.
+    - Target language selector (English, Tamil, Hindi, Telugu, Malayalam, Kannada).
+    - "Start Translation Session" button navigates to session page.
+
+3.4 Session Page
+    - Camera and microphone permission request on entry.
+    - Live camera preview with LIVE badge.
+    - Camera On/Off and Mic On/Off toggle buttons.
+    - Deepgram real-time speech-to-text (starts when mic is turned on).
+    - Translated captions appear in the description box.
+    - MediaPipe hand gesture detection runs automatically.
+    - Gesture warning counter badge (top-right corner).
+    - Stop Session button ends all streams.
+    - PDF download button exports the transcript.
+
+3.5 Gesture Detection
+    - Uses MediaPipe Hands to track 21 hand landmarks.
+    - Detects middle-finger gesture (middle extended, others folded).
+    - 2500ms cooldown between detections to prevent spam.
+
+3.6 Warning System
+    - Warning 1/3 → Yellow badge, red alert in description box.
+    - Warning 2/3 → Yellow badge, red alert in description box.
+    - Warning 3/3 → Red pulsing badge, session auto-terminates.
+    - Each violation is logged to MongoDB via the backend API.
+
+3.7 PDF Export
+    - Uses jsPDF to generate a professional A4 PDF.
+    - Includes: title, user name, date/time, language, all transcript lines.
+    - System alert lines appear in red bold.
+    - Handles long text wrapping and page overflow.
+    - Footer with page numbers on every page.
+
+3.8 Translation
+    - Uses LibreTranslate (self-hosted or public instance).
+    - Automatic source language detection (source: "auto").
+    - Does NOT use Google Translate API.
+
+
+================================================================================
+4. FULL TECH STACK EXPLANATION
+================================================================================
+
+FRONTEND:
+  React 18            - Component-based UI framework.
+  Vite                 - Fast build tool and dev server.
+  Tailwind CSS         - Utility-first CSS framework.
+  Framer Motion        - Declarative animations for React.
+  React Three Fiber    - React renderer for Three.js (3D graphics).
+  Three.js             - 3D library (used via R3F).
+  Firebase Auth        - Google Sign-In authentication.
+  Deepgram             - Real-time speech-to-text via WebSocket.
+  MediaPipe Hands      - Hand landmark detection (loaded via CDN).
+  jsPDF                - Client-side PDF generation.
+  Axios                - HTTP client for API requests.
+  React Router DOM     - Client-side routing.
+
+BACKEND:
+  Node.js              - JavaScript runtime.
+  Express.js           - Web framework for APIs.
+  MongoDB Atlas        - Cloud database (NoSQL).
+  Mongoose             - MongoDB object modeling for Node.js.
+  Firebase Admin SDK   - Server-side token verification.
+  LibreTranslate       - Open-source translation API.
+  Helmet               - HTTP security headers.
+  Morgan               - HTTP request logger.
+  CORS                 - Cross-origin resource sharing.
+  dotenv               - Environment variable management.
+  Nodemon              - Auto-restart server on file changes (dev).
+
+
+================================================================================
+5. FRONTEND FOLDER EXPLANATION
+================================================================================
+
+client/src/
+├── main.jsx               Entry point. Renders App inside BrowserRouter.
+├── App.jsx                Root component. Wraps AuthProvider + AppRouter.
+├── index.css              Global styles (Tailwind directives).
+├── router.jsx             Route definitions (/, /login, /dashboard, /session).
+│
+├── pages/
+│   ├── LandingPage.jsx    Public landing page with hero + features.
+│   ├── LoginPage.jsx      Google Sign-In page.
+│   ├── DashboardPage.jsx  User profile + language selector + start session.
+│   └── SessionPage.jsx    Live session with camera, STT, translation, gestures.
+│
+├── components/
+│   ├── layout/            Shared layout components (Navbar, etc.).
+│   ├── landing/           Landing page sections.
+│   ├── session/
+│   │   ├── CameraPreview.jsx      Video element + camera-off overlay.
+│   │   ├── VideoAudioControls.jsx  Camera/mic toggle buttons.
+│   │   ├── DescriptionBox.jsx      Translated transcript display.
+│   │   ├── GestureCounter.jsx      Warning count badge.
+│   │   └── LanguageDropdown.jsx    Language selector dropdown.
+│   └── ui/                Reusable UI primitives.
+│
+├── context/
+│   ├── AuthContext.jsx    Firebase auth state (user, login, logout).
+│   └── SessionContext.jsx Session state (language, lines, addLine, clearLines).
+│
+├── hooks/
+│   ├── useDeepgram.js     WebSocket connection to Deepgram, MediaRecorder.
+│   ├── useMediaPipe.js    MediaPipe Hands initialization and inference loop.
+│   └── useGestureAlert.js Warning count management + violation logging.
+│
+├── services/
+│   ├── firebase.js        Firebase app initialization + auth export.
+│   ├── api.js             Backend API helpers (translateText, logViolation).
+│   └── pdf.js             PDF transcript generation (downloadPDF).
+│
+├── constants/
+│   └── languages.js       Supported language list with codes.
+│
+├── utils/
+│   ├── cn.js              Classname merge utility.
+│   └── formatDate.js      Date formatting helper.
+│
+└── routes/
+    └── ProtectedRoute.jsx Redirects to /login if not authenticated.
+
+
+================================================================================
+6. BACKEND FOLDER EXPLANATION
+================================================================================
+
+server/
+├── index.js               Express app setup, route mounting, app.listen.
+├── package.json           Dependencies, scripts, "type": "module".
+├── .env.example           Template for environment variables.
+│
+├── config/
+│   ├── db.js              Mongoose connection to MongoDB Atlas.
+│   └── firebaseAdmin.js   Firebase Admin SDK initialization.
+│
+├── routes/
+│   ├── auth.routes.js     POST /save → save/upsert user.
+│   ├── translate.routes.js GET /ping, POST / → translate text.
+│   └── violation.routes.js POST / → log gesture violation.
+│
+├── controllers/
+│   ├── auth.controller.js      saveUser (upsert by uid).
+│   ├── translate.controller.js translateText + ping.
+│   └── violation.controller.js logViolation.
+│
+├── models/
+│   ├── User.model.js      Mongoose schema: uid, name, email, photo.
+│   └── Violation.model.js Mongoose schema: uid, warningCount, message.
+│
+├── middleware/
+│   ├── verifyToken.js     Verifies Firebase Bearer token.
+│   ├── errorHandler.js    Global error response handler.
+│   └── notFound.js        404 handler.
+│
+├── services/
+│   └── libreTranslate.service.js  Calls LibreTranslate /translate.
+│
+└── utils/
+    └── languageMap.js     Maps language names to ISO codes.
+
+
+================================================================================
+7. STEP-BY-STEP LOCAL SETUP
+================================================================================
+
+PREREQUISITES:
+  - Node.js 18 or later installed.
+  - Docker Desktop installed and running.
+  - A web browser (Chrome recommended).
+  - A Google account (for Firebase authentication).
+
+STEPS:
+
+Step 1: Clone or download the project.
+  git clone <your-repo-url>
+  cd my-meet
+
+Step 2: Start LibreTranslate via Docker.
+  docker run -it -p 5001:5000 libretranslate/libretranslate
+  Wait until it says "Running on http://0.0.0.0:5000".
+  It will be accessible at http://localhost:5001 on your machine.
+
+Step 3: Setup the backend.
+  cd server
+  cp .env.example .env
+  Open .env and fill in your values (see sections 8–14 below).
+  npm install
+  npm run dev
+  You should see:
+    ✅ MongoDB connected
+    ✅ Firebase Admin initialized
+    🚀 Server listening on http://localhost:5000
+
+Step 4: Setup the frontend.
+  cd client
+  cp .env.example .env
+  Open .env and fill in your values (see sections 8–14 below).
+  npm install
+  npm run dev
+  Frontend opens at http://localhost:5173.
+
+Step 5: Open http://localhost:5173 in Chrome.
+
+
+================================================================================
+8. HOW TO CREATE A FIREBASE PROJECT
+================================================================================
+
+1. Go to https://console.firebase.google.com
+2. Click "Add project".
+3. Enter a project name (e.g., "AI Translation Room").
+4. Disable Google Analytics (optional, not needed).
+5. Click "Create project".
+6. Wait for the project to be created.
+7. Click "Continue".
+
+
+================================================================================
+9. HOW TO ENABLE GOOGLE LOGIN IN FIREBASE
+================================================================================
+
+1. In Firebase Console, go to your project.
+2. Click "Authentication" in the left sidebar.
+3. Click "Get started".
+4. Click "Sign-in method" tab.
+5. Click "Google" under "Additional providers".
+6. Toggle "Enable".
+7. Select a support email address.
+8. Click "Save".
+
+
+================================================================================
+10. HOW TO GET FIREBASE WEB CONFIG
+================================================================================
+
+1. In Firebase Console, go to Project Settings (gear icon).
+2. Scroll down to "Your apps".
+3. Click "Add app" → select Web (</> icon).
+4. Register your app (e.g., "ai-translation-room").
+5. Firebase shows a config object like:
+
+   const firebaseConfig = {
+     apiKey: "AIza...",
+     authDomain: "your-project.firebaseapp.com",
+     projectId: "your-project",
+     appId: "1:123456:web:abc..."
+   };
+
+6. Copy these values into your client/.env:
+
+   VITE_FIREBASE_API_KEY=AIza...
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project
+   VITE_FIREBASE_APP_ID=1:123456:web:abc...
+
+
+================================================================================
+11. HOW TO GET FIREBASE ADMIN SDK VALUES
+================================================================================
+
+1. In Firebase Console, go to Project Settings.
+2. Click "Service accounts" tab.
+3. Click "Generate new private key".
+4. A JSON file downloads. Open it.
+5. Copy these values into server/.env:
+
+   FIREBASE_PROJECT_ID=your-project
+   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----\n"
+
+IMPORTANT: Wrap the FIREBASE_PRIVATE_KEY value in double quotes.
+           Keep the \n characters as-is inside the quotes.
+
+
+================================================================================
+12. HOW TO CREATE MONGODB ATLAS CLUSTER
+================================================================================
+
+1. Go to https://www.mongodb.com/atlas
+2. Sign up or sign in.
+3. Click "Build a Database".
+4. Select the free "M0" tier.
+5. Choose a cloud provider and region.
+6. Click "Create Cluster".
+7. Create a database user:
+   - Username: your choice
+   - Password: your choice (save it!)
+8. Add your IP address to the IP Access List:
+   - Click "Add My Current IP Address"
+   - Or add 0.0.0.0/0 to allow all IPs (for development only).
+9. Click "Finish and Close".
+
+
+================================================================================
+13. HOW TO GET MONGODB URI
+================================================================================
+
+1. In MongoDB Atlas, click "Connect" on your cluster.
+2. Select "Connect your application".
+3. Copy the connection string. It looks like:
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+4. Replace <username> and <password> with your database user credentials.
+5. Add a database name after the host:
+   mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/ai-translation-room?retryWrites=true&w=majority
+6. Paste this into server/.env as MONGODB_URI.
+
+
+================================================================================
+14. HOW TO CREATE DEEPGRAM API KEY
+================================================================================
+
+1. Go to https://console.deepgram.com
+2. Sign up or sign in.
+3. Go to "API Keys" in the left sidebar.
+4. Click "Create a New API Key".
+5. Name it (e.g., "AI Translation Room").
+6. Select permissions: "Member" is sufficient.
+7. Copy the API key.
+8. Paste it into client/.env:
+   VITE_DEEPGRAM_API_KEY=your_deepgram_api_key
+
+NOTE: Deepgram gives free credits for new accounts.
+
+
+================================================================================
+15. HOW TO RUN LIBRETRANSLATE USING DOCKER
+================================================================================
+
+LibreTranslate is a free, open-source translation API.
+
+REQUIREMENTS:
+  - Docker Desktop must be installed and running.
+
+COMMAND:
+  docker run -it -p 5001:5000 libretranslate/libretranslate
+
+WHAT HAPPENS:
+  - Docker downloads the LibreTranslate image (first time only).
+  - It downloads language models (~1-2 GB, takes a few minutes).
+  - When ready, it outputs: "Running on http://0.0.0.0:5000"
+  - On your machine, it's accessible at: http://localhost:5001
+
+TEST:
+  Open http://localhost:5001 in your browser.
+  You should see the LibreTranslate web interface.
+
+IMPORTANT:
+  Keep this terminal window open while using the app.
+  If you close it, translation will stop working.
+
+
+================================================================================
+16. HOW AUTO LANGUAGE DETECTION WORKS
+================================================================================
+
+When you speak into the microphone:
+
+1. Deepgram captures the audio via MediaRecorder.
+2. Audio chunks are sent every 250ms via WebSocket to Deepgram servers.
+3. Deepgram's Nova-2 model (with language=multi) automatically detects
+   the spoken language and transcribes it to text.
+4. The transcript is sent to the backend /api/translate endpoint.
+5. The backend forwards it to LibreTranslate with source: "auto".
+6. LibreTranslate auto-detects the source language and translates it
+   to the user's chosen target language.
+7. The translated text appears in the description box.
+
+This means users can speak in ANY supported language and see translations
+without manually selecting their source language.
+
+
+================================================================================
+17. HOW TRANSLATION WORKS
+================================================================================
+
+FLOW:
+  User speaks → Deepgram STT → transcript text
+  → Frontend api.js sends POST /api/translate with Bearer token
+  → Backend controller validates text + targetLanguage
+  → Backend looks up language code from languageMap
+  → Backend service calls LibreTranslate /translate
+  → LibreTranslate returns { translatedText: "..." }
+  → Backend returns { translatedText: "..." } to frontend
+  → Frontend displays "User 1: <translated text>" in DescriptionBox
+
+IMPORTANT:
+  - The app uses LibreTranslate ONLY.
+  - Google Translate API is NOT used.
+  - All translation requests go through the backend (never direct from frontend).
+  - Firebase Bearer token is required for the /api/translate endpoint.
+
+
+================================================================================
+18. HOW GESTURE DETECTION WORKS
+================================================================================
+
+MediaPipe Hands is loaded via CDN scripts in index.html.
+It tracks 21 hand landmarks in real-time from the camera feed.
+
+DETECTION LOGIC:
+  Middle finger extended: landmarks[12].y < landmarks[9].y
+  Index finger folded:    landmarks[8].y  > landmarks[6].y
+  Ring finger folded:     landmarks[16].y > landmarks[14].y
+  Pinky finger folded:    landmarks[20].y > landmarks[18].y
+
+  If ALL four conditions are true → middle-finger gesture detected.
+
+COOLDOWN:
+  After a detection, there is a 2500ms cooldown before the next
+  detection can trigger. This prevents rapid repeated warnings.
+
+PROCESSING:
+  - Runs entirely in the browser (no video sent to backend).
+  - Uses requestAnimationFrame for continuous frame processing.
+  - Starts automatically when the camera stream is available.
+
+
+================================================================================
+19. HOW THE WARNING SYSTEM WORKS
+================================================================================
+
+When a middle-finger gesture is detected:
+
+  Warning 1/3:
+    - Badge turns yellow.
+    - Red alert line appears in description box.
+    - Violation logged to MongoDB via POST /api/violations.
+
+  Warning 2/3:
+    - Badge stays yellow.
+    - Another red alert line appears.
+    - Another violation logged.
+
+  Warning 3/3:
+    - Badge turns red and pulses.
+    - Final red alert line: "User 1 was removed from the session."
+    - Session auto-terminates (Deepgram, MediaPipe, camera all stop).
+    - Controls are disabled.
+    - User can only go "Back to Dashboard" or download PDF.
+
+
+================================================================================
+20. HOW PDF EXPORT WORKS
+================================================================================
+
+The PDF button is in the session page action bar.
+It is disabled when there are no transcript lines.
+
+When clicked, it generates a PDF using jsPDF:
+
+  1. Creates an A4 portrait document.
+  2. Adds a title: "AI Translation Room — Session Transcript".
+  3. Adds metadata: user name, date/time, selected language, line count.
+  4. Adds a horizontal divider.
+  5. Adds all transcript lines:
+     - Normal lines in dark text.
+     - System Alert lines (starting with ⚠) in red bold.
+  6. Handles long text wrapping to page width.
+  7. Automatically adds new pages when content overflows.
+  8. Adds a footer on every page: "AI Translation Room — Page X of Y".
+  9. Saves the file as "session-transcript.pdf".
+
+
+================================================================================
+21. HOW TO DEPLOY FRONTEND ON VERCEL
+================================================================================
+
+1. Push your code to a GitHub repository.
+2. Go to https://vercel.com and sign in with GitHub.
+3. Click "New Project".
+4. Import your GitHub repository.
+5. Configure the project:
+   - Framework Preset: Vite
+   - Root Directory: client
+   - Build Command: npm run build
+   - Output Directory: dist
+6. Click "Deploy".
+7. After deployment, note your Vercel URL (e.g., https://your-app.vercel.app).
+8. Add environment variables (see section 23).
+
+
+================================================================================
+22. HOW TO DEPLOY BACKEND ON RENDER
+================================================================================
+
+1. Go to https://render.com and sign in.
+2. Click "New" → "Web Service".
+3. Connect your GitHub repository.
+4. Configure:
+   - Name: ai-translation-room-server
+   - Root Directory: server
+   - Runtime: Node
+   - Build Command: npm install
+   - Start Command: npm start
+5. Click "Create Web Service".
+6. After deployment, note your Render URL (e.g., https://your-server.onrender.com).
+7. Add environment variables (see section 24).
+
+
+================================================================================
+23. WHAT TO SET IN VERCEL ENVIRONMENT VARIABLES
+================================================================================
+
+Go to your Vercel project → Settings → Environment Variables.
+Add the following:
+
+  VITE_FIREBASE_API_KEY        = (your Firebase API key)
+  VITE_FIREBASE_AUTH_DOMAIN    = (your-project.firebaseapp.com)
+  VITE_FIREBASE_PROJECT_ID     = (your Firebase project ID)
+  VITE_FIREBASE_APP_ID         = (your Firebase app ID)
+  VITE_DEEPGRAM_API_KEY        = (your Deepgram API key)
+  VITE_BACKEND_URL             = https://your-server.onrender.com
+
+IMPORTANT:
+  Set VITE_BACKEND_URL to your Render backend URL (not localhost).
+
+
+================================================================================
+24. WHAT TO SET IN RENDER ENVIRONMENT VARIABLES
+================================================================================
+
+Go to your Render service → Environment.
+Add the following:
+
+  PORT                   = 5000
+  CLIENT_URL             = https://your-app.vercel.app
+  MONGODB_URI            = mongodb+srv://user:pass@cluster0.../ai-translation-room...
+  FIREBASE_PROJECT_ID    = (your Firebase project ID)
+  FIREBASE_CLIENT_EMAIL  = (your Firebase service account email)
+  FIREBASE_PRIVATE_KEY   = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+  LIBRETRANSLATE_URL     = (your hosted LibreTranslate URL)
+  LIBRETRANSLATE_API_KEY = (optional)
+
+IMPORTANT:
+  - Set CLIENT_URL to your Vercel frontend URL.
+  - FIREBASE_PRIVATE_KEY must be wrapped in double quotes with \n intact.
+  - LIBRETRANSLATE_URL=http://localhost:5001 will NOT work on Render.
+    You need a hosted LibreTranslate instance for production.
+
+
+================================================================================
+25. COMMON ERRORS AND FIXES
+================================================================================
+
+ERROR: "MONGODB_URI not defined" or "MongoDB connection failed"
+FIX:   Check server/.env has a valid MONGODB_URI.
+       Ensure your IP is whitelisted in MongoDB Atlas.
+       Ensure username and password are correct.
+
+ERROR: "Firebase Admin initialization failed"
+FIX:   Check FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
+       in server/.env. Wrap FIREBASE_PRIVATE_KEY in double quotes.
+
+ERROR: "Unauthorized: No token provided"
+FIX:   The frontend must send Authorization: Bearer <token> header.
+       Ensure the user is logged in before making API requests.
+
+ERROR: "LibreTranslate error" or translation not working
+FIX:   Ensure Docker is running and LibreTranslate is accessible at
+       http://localhost:5001. Try opening it in your browser.
+
+ERROR: "VITE_DEEPGRAM_API_KEY is not set" or Deepgram not connecting
+FIX:   Check client/.env has VITE_DEEPGRAM_API_KEY set.
+       Ensure the API key is valid at https://console.deepgram.com.
+
+ERROR: Camera/microphone permission denied
+FIX:   Click the lock icon in Chrome's address bar → allow camera and mic.
+       Or go to chrome://settings/content and reset permissions.
+
+ERROR: MediaPipe Hands not loading
+FIX:   Ensure CDN scripts are in client/index.html.
+       Check browser console for network errors loading MediaPipe files.
+       Ensure you have internet access (CDN scripts load from jsdelivr).
+
+ERROR: PDF button is disabled
+FIX:   The PDF button only activates when there are transcript lines.
+       Speak into the microphone first to generate transcript content.
+
+ERROR: "Module not found" or import errors
+FIX:   Run npm install in both client/ and server/ directories.
+       Check that import paths use correct relative paths.
+
+ERROR: CORS errors in browser console
+FIX:   Ensure CLIENT_URL in server/.env matches the frontend URL.
+       For local development: CLIENT_URL=http://localhost:5173
+
+
+================================================================================
+26. FINAL TESTING CHECKLIST
+================================================================================
+
+Before submitting or deploying, verify all of these:
+
+LANDING PAGE:
+  [ ] Page loads without errors.
+  [ ] 3D globe renders in hero section.
+  [ ] All sections visible (features, workflow, tech, CTA, footer).
+  [ ] Responsive on mobile/tablet.
+  [ ] "Get Started" button navigates to /login.
+
+AUTHENTICATION:
+  [ ] Google Sign-In popup appears and works.
+  [ ] User is redirected to /dashboard after successful login.
+  [ ] User name and avatar appear on dashboard.
+  [ ] Logout button works (redirects to landing or login).
+  [ ] Visiting /dashboard without login redirects to /login.
+
+DASHBOARD:
+  [ ] Language dropdown shows all 6 languages.
+  [ ] Selected language is passed to session page.
+  [ ] "Start Translation Session" navigates to /session.
+
+SESSION PAGE:
+  [ ] Camera permission dialog appears.
+  [ ] Microphone permission dialog appears.
+  [ ] Camera preview shows live video.
+  [ ] "Camera On/Off" toggle hides/shows video.
+  [ ] "Mic On/Off" toggle starts/stops Deepgram.
+  [ ] Speaking produces translated text in description box.
+  [ ] Language selector is disabled while listening.
+  [ ] "Gesture AI" indicator appears when MediaPipe loads.
+  [ ] "Listening…" indicator appears when mic is on.
+
+GESTURE DETECTION:
+  [ ] Middle-finger gesture is detected.
+  [ ] Warning badge updates (gray → yellow → red).
+  [ ] System alert lines appear in red in description box.
+  [ ] Session auto-terminates after 3 warnings.
+  [ ] Violations are logged in MongoDB.
+
+PDF EXPORT:
+  [ ] PDF button is disabled with no transcript.
+  [ ] PDF button is enabled after speech/translation.
+  [ ] Downloaded PDF contains title, user name, date, language.
+  [ ] Downloaded PDF contains all transcript lines.
+  [ ] Alert lines appear in red bold in PDF.
+
+BACKEND:
+  [ ] GET /health returns { status: "ok" }.
+  [ ] GET /api/translate/ping returns ready message.
+  [ ] POST /api/translate works with valid token + body.
+  [ ] POST /api/violations works with valid token + body.
+  [ ] Invalid requests return proper error responses.
+
+DEPLOYMENT:
+  [ ] Frontend builds successfully (npm run build).
+  [ ] Backend starts with npm start.
+  [ ] Vercel deployment works with correct env vars.
+  [ ] Render deployment works with correct env vars.
+  [ ] Frontend communicates with deployed backend.
+  [ ] LibreTranslate is accessible from deployed backend.
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
