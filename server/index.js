@@ -1,4 +1,4 @@
-// server/index.js
+// server/index.js (reloaded)
 // ─────────────────────────────────────────────────────────────────────────────
 // CRITICAL: These two lines MUST come before any other import so that:
 //   1. DNS resolution always prefers IPv4 (fixes querySrv ECONNREFUSED on Windows/Node 24)
@@ -21,6 +21,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import translateRoutes from "./routes/translate.routes.js";
 import violationRoutes from "./routes/violation.routes.js";
+import deepgramRoutes from "./routes/deepgram.routes.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
@@ -72,6 +73,7 @@ const startServer = async () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/translate", translateRoutes);
   app.use("/api/violations", violationRoutes);
+  app.use("/api/deepgram", deepgramRoutes);
 
   // 404 & global error handler (must be last)
   app.use(notFound);

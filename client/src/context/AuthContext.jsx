@@ -6,6 +6,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
+import { saveUser } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -38,11 +39,39 @@ export const AuthProvider = ({ children }) => {
 
   // ── Auth-state listener ──────────────────────────────────────────────────────
   useEffect(() => {
+    if (window.isTestingMode) {
+      console.log("[Auth] Testing mode active — bypass Firebase auth");
+      const testUser = {
+        uid: "test-uid",
+        displayName: "Sudhan Test",
+        email: "test@example.com",
+        photoURL: "https://ui-avatars.com/api/?name=Sudhan+Test",
+        getIdToken: async () => "test-token"
+      };
+      setUser(testUser);
+      setLoading(false);
+      // Still sync user to DB so that saveUser endpoint is validation-tested
+      saveUser({
+        uid: testUser.uid,
+        name: testUser.displayName,
+        email: testUser.email,
+        photo: testUser.photoURL,
+      });
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
       if (currentUser) {
         console.log("[Auth] onAuthStateChanged — user signed in:", currentUser.uid);
+        // Sync user profile to MongoDB
+        saveUser({
+          uid: currentUser.uid,
+          name: currentUser.displayName || "",
+          email: currentUser.email || "",
+          photo: currentUser.photoURL || "",
+        });
       } else {
         console.log("[Auth] onAuthStateChanged — no user");
       }
@@ -52,6 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── ID-token refresh listener ────────────────────────────────────────────────
   useEffect(() => {
+    if (window.isTestingMode) return;
     const unsub = auth.onIdTokenChanged((newUser) => {
       setUser(newUser);
       if (newUser) {
@@ -64,6 +94,10 @@ export const AuthProvider = ({ children }) => {
   // ── Login ───────────────────────────────────────────────────────────────────
   const login = async () => {
     setAuthError(null); // clear stale errors before each attempt
+    if (window.isTestingMode) {
+      console.log("[Auth] Login bypassed in testing mode");
+      return;
+    }
     try {
       const result = await signInWithPopup(auth, googleProvider);
       console.log("[Auth] Login success:", result.user.uid);

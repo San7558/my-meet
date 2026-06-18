@@ -33,9 +33,18 @@ const SessionPage = () => {
   // is guaranteed to be in the DOM before we call videoRef.current.srcObject = stream.
   const [loading, setLoading] = useState(true);
 
+  // ── Log component mount ─────────────────────────────────────────────────
+  useEffect(() => {
+    console.log("[Session] ✅ Component mounted");
+    console.log("[Session] Route state:", location.state);
+    return () => console.log("[Session] Component unmounted");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Initialise language from dashboard router state ──────────────────────
   useEffect(() => {
     const lang = location.state?.displayLanguage;
+    console.log("[Session] displayLanguage from route state:", lang || "(none — using default)");
     if (lang) setDisplayLanguage(lang);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -80,6 +89,8 @@ const SessionPage = () => {
           stream.getTracks().forEach((t) => t.stop());
           return;
         }
+        // Audio starts muted (audioOn=false) — user must explicitly enable mic
+        stream.getAudioTracks().forEach((t) => { t.enabled = false; });
         streamRef.current = stream;
         // Flip loading → false. This causes React to unmount the spinner
         // and render the main layout (which includes <CameraPreview> with the <video> ref).
@@ -182,11 +193,15 @@ const SessionPage = () => {
       return;
     }
     if (!audioOn) {
-      console.log("[Session] Starting Deepgram…");
+      console.log("[Session] Starting Deepgram… enabling audio tracks");
+      // Enable all audio tracks so MediaRecorder captures real audio
+      streamRef.current.getAudioTracks().forEach((t) => { t.enabled = true; });
       startListening(streamRef.current);
     } else {
-      console.log("[Session] Stopping Deepgram…");
+      console.log("[Session] Stopping Deepgram… muting audio tracks");
       stopListening();
+      // Mute audio tracks to prevent background capture
+      streamRef.current.getAudioTracks().forEach((t) => { t.enabled = false; });
     }
     setAudioOn((prev) => !prev);
   }, [audioOn, startListening, stopListening]);

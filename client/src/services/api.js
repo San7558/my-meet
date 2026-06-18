@@ -63,3 +63,41 @@ export const logViolation = async (warningCount, message) => {
     console.error("[api] logViolation error:", err);
   }
 };
+
+/**
+ * Save/update user profile in the backend database.
+ * @param {{ uid: string, name: string, email: string, photo: string }} userData
+ */
+export const saveUser = async (userData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/save`, userData);
+    console.log("[api] User synced to DB:", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("[api] saveUser error:", err);
+  }
+};
+
+/**
+ * Get a short-lived (30s) Deepgram temporary token from our backend.
+ * The backend mints this via POST https://api.deepgram.com/v1/auth/grant.
+ * The browser must use this token as a WebSocket sub-protocol:
+ *   new WebSocket(url, ["token", tempToken])
+ *
+ * This is the ONLY reliable cross-browser auth method since browsers cannot
+ * set custom Authorization headers on WebSocket connections.
+ *
+ * @returns {Promise<string>} Deepgram temporary token
+ */
+export const getDeepgramToken = async () => {
+  const headers = await getAuthHeader();
+  console.log("[api] Requesting Deepgram temp token from backend…");
+  const response = await axios.get(
+    `${API_BASE_URL}/api/deepgram/token`,
+    { headers }
+  );
+  const token = response.data?.token;
+  if (!token) throw new Error("Backend returned no Deepgram token");
+  console.log("[api] Deepgram temp token received — first 8 chars:", token.substring(0, 8) + "…");
+  return token;
+};

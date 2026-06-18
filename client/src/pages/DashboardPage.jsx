@@ -18,10 +18,14 @@ const DashboardPage = () => {
   };
 
   const handleStartSession = () => {
-    navigate("/session", { state: { displayLanguage: langLabels[language] || "English" } });
+    const lang = langLabels[language] || "English";
+    console.log("[Dashboard] Start Session clicked — language:", lang);
+    console.log("[Dashboard] Navigating to SessionPage with state:", { displayLanguage: lang });
+    navigate("/session", { state: { displayLanguage: lang } });
   };
 
   const handleLogout = async () => {
+    console.log("[Dashboard] Logging out…");
     await logout();
   };
 

@@ -13,4 +13,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
+if (typeof window !== "undefined") {
+  window.auth = auth;
+  window.GoogleAuthProvider = GoogleAuthProvider;
+}
+
 export { auth, googleProvider };
