@@ -80,8 +80,9 @@ const startServer = async () => {
   app.use(errorHandler);
 
   // 3. Start listening only after DB is confirmed
-  app.listen(PORT, () => {
-    console.log(`🚀 Server listening on http://localhost:${PORT}`);
+  const HOST = "0.0.0.0";
+  app.listen(PORT, HOST, () => {
+    console.log(`🚀 Server listening on http://${HOST}:${PORT}`);
   });
 };
 
