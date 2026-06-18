@@ -43,9 +43,11 @@ const SessionPage = () => {
 
   // ── Initialise language from dashboard router state ──────────────────────
   useEffect(() => {
-    const lang = location.state?.displayLanguage;
-    console.log("[Session] displayLanguage from route state:", lang || "(none — using default)");
-    if (lang) setDisplayLanguage(lang);
+    // Fallback order: location state -> localStorage -> default "English"
+    const savedLang = localStorage.getItem("displayLanguage");
+    const lang = location.state?.displayLanguage || savedLang || "English";
+    console.log("[Session] displayLanguage from route state or fallback:", lang);
+    setDisplayLanguage(lang);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

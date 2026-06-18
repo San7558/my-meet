@@ -5,7 +5,15 @@ const SessionContext = createContext(null);
 
 export const SessionProvider = ({ children }) => {
   // Display language – stores full label like "English", "Tamil", etc.
-  const [displayLanguage, setDisplayLanguage] = useState("English");
+  // Persisted in localStorage so it survives page refreshes
+  const [displayLanguage, setDisplayLanguageState] = useState(() => {
+    return localStorage.getItem("displayLanguage") || "English";
+  });
+
+  const setDisplayLanguage = (lang) => {
+    localStorage.setItem("displayLanguage", lang);
+    setDisplayLanguageState(lang);
+  };
 
   // Transcript / translated lines shown in the description box
   const [descriptionLines, setDescriptionLines] = useState([]);
