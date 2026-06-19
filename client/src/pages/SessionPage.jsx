@@ -79,7 +79,12 @@ const SessionPage = () => {
         console.log("[Session] Requesting getUserMedia…");
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: true,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+          },
         });
         console.log(
           "[Session] Stream acquired:",

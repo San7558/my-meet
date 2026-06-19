@@ -93,7 +93,10 @@ const useDeepgram = ({ displayLanguage, onTranslated }) => {
       `?model=nova-2` +
       `&language=multi` +
       `&interim_results=false` +
-      `&punctuate=true`;
+      `&punctuate=true` +
+      `&vad_events=true` +
+      `&endpointing=300` +
+      `&smart_format=true`;
 
     console.log("[Deepgram] WS URL:", wsUrl);
     console.log("[Deepgram] Opening WebSocket with sub-protocol auth: [\"bearer\", <tempToken>]");
